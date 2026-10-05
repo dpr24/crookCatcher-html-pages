@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crook Catcher — Technical & Feature Specifications</title>
+    <meta name="description"
+        content="Detailed technical, feature, and architectural specifications for Crook Catcher mobile anti-theft app (Flutter) and Laravel backend.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Mermaid.js for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --bg-card: rgba(31, 41, 55, 0.6);
+            --bg-card-hover: rgba(37, 47, 63, 0.8);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(99, 102, 241, 0.3);
+
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+
+            --accent-primary: #6366f1;
+            /* Indigo */
+            --accent-secondary: #3b82f6;
+            /* Blue */
+            --accent-success: #10b981;
+            /* Emerald */
+            --accent-warning: #f59e0b;
+            /* Amber */
+            --accent-danger: #ef4444;
+            /* Rose/Red */
+            --accent-purple: #8b5cf6;
+
+            --sidebar-width: 300px;
+            --header-height: 70px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+
+            --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.15);
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        .light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(241, 245, 249, 0.9);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-highlight: rgba(99, 102, 241, 0.4);
+
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --shadow-glow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+
+        /* Top Header */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .brand-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--accent-primary);
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+            width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-highlight);
+        }
+
+        /* Layout Container */
+        .layout-container {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* Sidebar Nav */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: var(--header-height);
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+            z-index: 100;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin: 1.2rem 0.75rem 0.5rem;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item a i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .nav-item a:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item a:hover i {
+            color: var(--accent-primary);
+        }
+
+        .nav-item.active a {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-primary);
+            font-weight: 600;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .nav-item.active a i {
+            color: var(--accent-primary);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2.5rem 3.5rem;
+            max-width: 1200px;
+        }
+
+        /* Hero Banner */
+        .hero-card {
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(17, 24, 39, 0.95)),
+                radial-gradient(circle at top right, rgba(99, 102, 241, 0.25), transparent 60%);
+            border: 1px solid var(--border-highlight);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge-group {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-pill.indigo {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .badge-pill.emerald {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-pill.purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .hero-title {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Section Commons */
+        .section-block {
+            margin-bottom: 4rem;
+            scroll-margin-top: calc(var(--header-height) + 2rem);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-number {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        /* Cards & Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-highlight);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon.blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-secondary);
+        }
+
+        .card-icon.emerald {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+
+        .card-icon.purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent-purple);
+        }
+
+        .card-icon.amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .card-icon.rose {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Feature Tabs & Filtering */
+        .feature-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.65rem 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.15);
+            border-bottom: 2px solid var(--accent-primary);
+        }
+
+        /* Feature Card Details */
+        .feature-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .feature-badge.free {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .feature-badge.pro {
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        /* Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin: 1.5rem 0;
+            background: var(--bg-secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            padding: 1rem 1.25rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            background: #060911;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            color: var(--accent-primary);
+        }
+
+        pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #a5b4fc;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* Callout Alerts */
+        .callout {
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 1rem;
+            border-left: 4px solid;
+            background: var(--bg-secondary);
+        }
+
+        .callout.info {
+            border-color: var(--accent-secondary);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .callout.warning {
+            border-color: var(--accent-warning);
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .callout.danger {
+            border-color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .callout.success {
+            border-color: var(--accent-success);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .callout-icon {
+            font-size: 1.25rem;
+            margin-top: 0.1rem;
+        }
+
+        .callout.info .callout-icon {
+            color: var(--accent-secondary);
+        }
+
+        .callout.warning .callout-icon {
+            color: var(--accent-warning);
+        }
+
+        .callout.danger .callout-icon {
+            color: var(--accent-danger);
+        }
+
+        .callout.success .callout-icon {
+            color: var(--accent-success);
+        }
+
+        .callout-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        /* Pros and Cons Matrix */
+        .pros-cons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .pro-card {
+            border-left: 4px solid var(--accent-success);
+        }
+
+        .con-card {
+            border-left: 4px solid var(--accent-warning);
+        }
+
+        .pro-list,
+        .con-list {
+            list-style: none;
+        }
+
+        .pro-list li,
+        .con-list li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .pro-list li::before {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--accent-success);
+        }
+
+        .con-list li::before {
+            content: "\f00d";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--accent-warning);
+        }
+
+        /* Mermaid Wrapper */
+        .mermaid-wrapper {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .search-box {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="top-header">
+        <a href="#" class="brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-user-ninja"></i>
+            </div>
+            <div>Crook Catcher</div>
+            <span class="brand-badge">Tech Spec v2.4</span>
+        </a>
+
+        <div class="header-controls">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Search features, code, tools...">
+            </div>
+
+            <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <button class="btn-icon" id="printBtn" onclick="window.print()" title="Print / Export PDF">
+                <i class="fa-solid fa-print"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="layout-container">
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section-title">Documentation Menu</div>
+            <ul class="nav-list">
+                <li class="nav-item active"><a href="#overview"><i class="fa-solid fa-compass"></i> 1. Executive
+                        Summary</a></li>
+                <li class="nav-item"><a href="#features"><i class="fa-solid fa-list-check"></i> 2. Feature Breakdown</a>
+                </li>
+                <li class="nav-item"><a href="#mechanics"><i class="fa-solid fa-gears"></i> 3. Operational Mechanics</a>
+                </li>
+                <li class="nav-item"><a href="#failure-modes"><i class="fa-solid fa-triangle-exclamation"></i> 4.
+                        Failure Modes</a></li>
+                <li class="nav-item"><a href="#config-matrix"><i class="fa-solid fa-sliders"></i> 5. Config Matrix</a>
+                </li>
+                <li class="nav-item"><a href="#difficulties"><i class="fa-solid fa-screwdriver-wrench"></i> 6. Tech
+                        Difficulties</a></li>
+                <li class="nav-item"><a href="#risks"><i class="fa-solid fa-shield-cat"></i> 7. Future Risks</a></li>
+                <li class="nav-item"><a href="#app-stack"><i class="fa-mobile-screen-button fa-solid"></i> 8. Flutter
+                        App Stack</a></li>
+                <li class="nav-item"><a href="#backend-stack"><i class="fa-solid fa-server"></i> 9. Laravel Backend</a>
+                </li>
+                <li class="nav-item"><a href="#pros-cons"><i class="fa-solid fa-scale-balanced"></i> 10. Pros & Cons</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Body -->
+        <main class="main-content">
+
+            <!-- Hero Banner -->
+            <section class="hero-card" id="overview">
+                <div class="hero-badge-group">
+                    <span class="badge-pill indigo"><i class="fa-solid fa-shield-halved"></i> Mobile Anti-Theft
+                        Security</span>
+                    <span class="badge-pill emerald"><i class="fa-solid fa-bolt"></i> Flutter 3.22 + Dart</span>
+                    <span class="badge-pill purple"><i class="fa-brands fa-laravel"></i> Laravel 11
+                        Infrastructure</span>
+                </div>
+                <h1 class="hero-title">Crook Catcher Architecture & Technical Specifications</h1>
+                <p class="hero-desc">
+                    Comprehensive technical blueprint, feature matrix, operational mechanics, device permissions, edge
+                    case mitigations, and backend server infrastructure for the Crook Catcher intruder detection
+                    ecosystem.
+                </p>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">Sub-800ms</span>
+                        <span class="stat-label">Photo Capture Latency</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">100% Silent</span>
+                        <span class="stat-label">Background Execution</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">Dual Cloud</span>
+                        <span class="stat-label">Google Drive + Laravel Sync</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">Android Admin</span>
+                        <span class="stat-label">Native Receiver Hook</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 1. Executive Summary -->
+            <div class="section-block">
+                <div class="section-header">
+                    <div class="section-number">1</div>
+                    <h2 class="section-title">Executive Summary & Purpose</h2>
+                </div>
+                <div class="glass-card">
+                    <p class="card-desc" style="font-size: 1rem; margin-bottom: 1rem;">
+                        <strong>Crook Catcher</strong> functions as an autonomous, silent mobile security sentinel.
+                        Mobile theft and unauthorized snooping usually occur when a phone is left unattended or stolen.
+                        Crook Catcher immediately captures high-definition photos, front/back video with ambient audio,
+                        exact GPS coordinates, and device telemetry when an unauthorized entity attempts to guess the
+                        screen PIN, pattern, or password.
+                    </p>
+                    <div class="callout info">
+                        <i class="fa-solid fa-circle-info callout-icon"></i>
+                        <div class="callout-content">
+                            <div class="callout-title">Core Mission Objective</div>
+                            Ensure that evidence (facial captures, GPS coordinates, and audio) is transmitted off-device
+                            instantaneously so that even if the physical phone is damaged, turned off, or factory reset,
+                            the owner retains definitive intruder evidence in their inbox and cloud storage.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Feature Breakdown -->
+            <div class="section-block" id="features">
+                <div class="section-header">
+                    <div class="section-number">2</div>
+                    <h2 class="section-title">Comprehensive Feature Breakdown</h2>
+                </div>
+
+                <div class="feature-controls">
+                    <button class="tab-btn active" onclick="filterFeatures('all')"><i
+                            class="fa-solid fa-border-all"></i> All Features</button>
+                    <button class="tab-btn" onclick="filterFeatures('free')"><i class="fa-solid fa-gift"></i> Core /
+                        Free Tier</button>
+                    <button class="tab-btn" onclick="filterFeatures('pro')"><i class="fa-solid fa-crown"></i> PRO
+                        Tier</button>
+                </div>
+
+                <div class="grid-2" id="featureGrid">
+                    <!-- Failed Unlock Trigger -->
+                    <div class="glass-card feature-item free">
+                        <span class="feature-badge free">Free</span>
+                        <div class="card-icon blue"><i class="fa-solid fa-lock"></i></div>
+                        <h3 class="card-title">Failed Unlock Trigger</h3>
+                        <p class="card-desc">Monitors lock screen PIN/Pattern/Password failures natively via Android
+                            DeviceAdmin. Configurable attempt threshold (1–5 attempts).</p>
+                    </div>
+
+                    <!-- Front Camera Photo -->
+                    <div class="glass-card feature-item free">
+                        <span class="feature-badge free">Free</span>
+                        <div class="card-icon emerald"><i class="fa-solid fa-camera"></i></div>
+                        <h3 class="card-title">Silent Front Photo Capture</h3>
+                        <p class="card-desc">Discreetly snaps a high-resolution facial photo using the front camera
+                            without flash or shutter audio feedback.</p>
+                    </div>
+
+                    <!-- GPS Location -->
+                    <div class="glass-card feature-item free">
+                        <span class="feature-badge free">Free</span>
+                        <div class="card-icon purple"><i class="fa-solid fa-location-dot"></i></div>
+                        <h3 class="card-title">Real-Time GPS Tagging</h3>
+                        <p class="card-desc">Extracts precise latitude/longitude, altitude, reverse-geocoded address,
+                            and Google Maps direct links at attempt time.</p>
+                    </div>
+
+                    <!-- Email Alert -->
+                    <div class="glass-card feature-item free">
+                        <span class="feature-badge free">Free</span>
+                        <div class="card-icon amber"><i class="fa-solid fa-envelope"></i></div>
+                        <h3 class="card-title">Instant Email Alert</h3>
+                        <p class="card-desc">Sends rich HTML emails to user inbox containing attached photos, map link,
+                            battery telemetry, and ISO timestamps.</p>
+                    </div>
+
+                    <!-- Dual Video & Sound -->
+                    <div class="glass-card feature-item pro">
+                        <span class="feature-badge pro">PRO</span>
+                        <div class="card-icon rose"><i class="fa-solid fa-video"></i></div>
+                        <h3 class="card-title">Real-time Video & Sound Recording</h3>
+                        <p class="card-desc">Records 1–3 minutes of continuous front & back camera video with ambient
+                            audio, even if the intruder eventually unlocks the phone.</p>
+                    </div>
+
+                    <!-- Fake Home Screen -->
+                    <div class="glass-card feature-item pro">
+                        <span class="feature-badge pro">PRO</span>
+                        <div class="card-icon blue"><i class="fa-solid fa-display"></i></div>
+                        <h3 class="card-title">Fake Home Screen Decoy</h3>
+                        <p class="card-desc">Launches a convincing fake launcher window overlay after 2nd attempt,
+                            tricking intruders into revealing more evidence thinking they succeeded.</p>
+                    </div>
+
+                    <!-- Google Drive Backup -->
+                    <div class="glass-card feature-item pro">
+                        <span class="feature-badge pro">PRO</span>
+                        <div class="card-icon emerald"><i class="fa-brands fa-google-drive"></i></div>
+                        <h3 class="card-title">Google Drive Auto-Backup</h3>
+                        <p class="card-desc">Automatically uploads all captured images, audio clips, and logs to a
+                            secondary user-specified Google Drive account.</p>
+                    </div>
+
+                    <!-- Loud Anti-Theft Alarm -->
+                    <div class="glass-card feature-item pro">
+                        <span class="feature-badge pro">PRO</span>
+                        <div class="card-icon amber"><i class="fa-solid fa-bullhorn"></i></div>
+                        <h3 class="card-title">Loud Anti-Theft Alarm</h3>
+                        <p class="card-desc">Triggers maximum-volume siren audio overriding silent/vibrate mode to
+                            startle thieves in crowded public locations.</p>
+                    </div>
+
+                    <!-- Disguised Icon -->
+                    <div class="glass-card feature-item pro">
+                        <span class="feature-badge pro">PRO</span>
+                        <div class="card-icon purple"><i class="fa-solid fa-mask"></i></div>
+                        <h3 class="card-title">Disguised Icon & App Lock</h3>
+                        <p class="card-desc">Disguises Crook Catcher under fake names (Calculator, Weather) and locks
+                            configuration settings with biometrics/PIN.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Operational Mechanics -->
+            <div class="section-block" id="mechanics">
+                <div class="section-header">
+                    <div class="section-number">3</div>
+                    <h2 class="section-title">Operational Mechanics: How & When It Works</h2>
+                </div>
+
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <h3 class="card-title"><i class="fa-solid fa-diagram-project"></i> Execution Lifecycle Sequence</h3>
+                    <p class="card-desc" style="margin-bottom: 1rem;">The end-to-end workflow when an intruder interacts
+                        with the locked mobile device:</p>
+
+                    <div class="mermaid-wrapper">
+                        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Intruder
+    participant LockScreen as Android LockScreen
+    participant Service as CrookCatcher Foreground Service
+    participant Hardware as Camera & GPS Hardware
+    participant LocalStorage as Encrypted Hive DB
+    participant Cloud as Mailgun / GDrive Cloud
+
+    Intruder->>LockScreen: Enters Incorrect PIN / Pattern
+    LockScreen->>Service: Trigger OnPasswordFailed() Event
+    Service->>Service: Check Failed Counter vs User Threshold
+    alt Threshold Exceeded
+        Service->>Hardware: Initialize Camera & Location Services
+        Hardware-->>Service: Return Photo Bytes + Lat/Long GPS
+        Service->>LocalStorage: Store Incident Log & Media Stream
+        Service->>Cloud: Dispatch SMTP Email & OAuth GDrive Upload
+        opt Fake Home Enabled (PRO)
+            Service->>Intruder: Render Fullscreen Window Overlay Decoy
+        end
+    else Threshold Not Met
+        Service->>LocalStorage: Increment Counter & Idle
+    end
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="glass-card">
+                        <div class="card-icon blue"><i class="fa-solid fa-power-off"></i></div>
+                        <h3 class="card-title">Boot Persistence (`RECEIVE_BOOT_COMPLETED`)</h3>
+                        <p class="card-desc">Crook Catcher registers a custom Android <code>BroadcastReceiver</code> for
+                            boot events. As soon as the device reboots, security services restart automatically in
+                            low-power idle mode.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-icon emerald"><i class="fa-solid fa-shield-heart"></i></div>
+                        <h3 class="card-title">Foreground Watchdog Service</h3>
+                        <p class="card-desc">Maintains process memory priority using an official Android
+                            <code>FOREGROUND_SERVICE</code> with low-priority notification channel, protecting the app
+                            from OS killer daemons.</p>
+                    </div>
+                </div>
+
+                <!-- Device Admin Access Sub-section -->
+                <div class="glass-card" style="margin-top: 2rem;">
+                    <div class="card-icon rose"><i class="fa-solid fa-user-shield"></i></div>
+                    <h3 class="card-title">Device Admin Access & Break-in Detection</h3>
+                    <p class="card-desc" style="margin-bottom: 1rem;">
+                        Device Admin access (<code>DevicePolicyManager</code>) is the mandatory engine required to
+                        intercept lock screen password attempts and detect break-ins.
+                    </p>
+
+                    <div class="callout warning" style="margin-bottom: 1.5rem;">
+                        <i class="fa-solid fa-shield-halved callout-icon"></i>
+                        <div class="callout-content">
+                            <div class="callout-title">Why Device Admin Permission is Essential:</div>
+                            <ul style="margin-left: 1.2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+                                <li><strong>Break-in Detection:</strong> Intercepts <code>onPasswordFailed()</code> and
+                                    <code>onPasswordSucceeded()</code> to verify if an intruder successfully unlocked
+                                    the device after failed attempts.</li>
+                                <li><strong>Uninstall Protection:</strong> Prevents unauthorized uninstallation by
+                                    thieves directly from system app settings.</li>
+                                <li><strong>Auto-Re-enable:</strong> Restores security monitoring hooks automatically
+                                    post-device reboot.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem;">Native Kotlin
+                        Listener (`AdminReceiver.kt`)</h4>
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span>AdminReceiver.kt</span>
+                            <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i>
+                                Copy</button>
+                        </div>
+                        <pre><code>class AdminReceiver : DeviceAdminReceiver() {
+    override fun onPasswordFailed(context: Context, intent: Intent) {
+        super.onPasswordFailed(context, intent)
+        // Trigger silent photo/video & GPS capture
+        BackgroundCaptureService.startCapture(context, isBreakIn = true)
+    }
+
+    override fun onPasswordSucceeded(context: Context, intent: Intent) {
+        super.onPasswordSucceeded(context, intent)
+        // Check if intruder succeeded after failed attempts (Break-in alert)
+        BreakInDetector.checkBreakInState(context)
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Failure Modes -->
+            <div class="section-block" id="failure-modes">
+                <div class="section-header">
+                    <div class="section-number">4</div>
+                    <h2 class="section-title">Failure Modes & Edge Cases (When It Fails)</h2>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Failure Scenario</th>
+                                <th>Root Cause</th>
+                                <th>Impact</th>
+                                <th>Mitigation Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: var(--accent-danger);">Instant Hard Power-Off</strong></td>
+                                <td>Thief immediately holds power button down upon failing PIN.</td>
+                                <td>Camera/GPS service interrupted before upload completes.</td>
+                                <td>Sub-800ms fast photo grab + immediate non-volatile disk caching for auto-dispatch on
+                                    next boot.</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: var(--accent-warning);">Offline / No Network</strong></td>
+                                <td>No SIM inserted, Wi-Fi disconnected, or Airplane mode active.</td>
+                                <td>Email alert and Google Drive cloud uploads fail instantly.</td>
+                                <td>WorkManager persistent queue with exponential retry backoff; flushes data upon
+                                    network reconnect.</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: var(--accent-warning);">Camera Hardware Lock</strong></td>
+                                <td>Camera resource occupied by system or another background app.</td>
+                                <td><code>CameraInUseException</code> thrown during capture.</td>
+                                <td>Automatic 500ms fallback retry loop; falls back to audio recording + location
+                                    payload if camera remains locked.</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: var(--accent-purple);">OEM Battery Killing</strong></td>
+                                <td>Aggressive background task killers on Xiaomi MIUI, Samsung OneUI, Vivo.</td>
+                                <td>Background service killed after long screen-off idle time.</td>
+                                <td>Guided onboarding screen directing user to disable OEM battery optimization & enable
+                                    Auto-Start.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. Config Matrix -->
+            <div class="section-block" id="config-matrix">
+                <div class="section-header">
+                    <div class="section-number">5</div>
+                    <h2 class="section-title">Feature Configuration Matrix (Enable / Disable Options)</h2>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Setting Name</th>
+                                <th>Tier</th>
+                                <th>Default</th>
+                                <th>Configurable Range</th>
+                                <th>Effect When Disabled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Attempt Threshold</strong></td>
+                                <td><span class="feature-badge free">Free</span></td>
+                                <td><code>2 Attempts</code></td>
+                                <td>1 to 5 Failed Attempts</td>
+                                <td>Default 2 attempts prevents accidental touches triggering alerts.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Front Photo Capture</strong></td>
+                                <td><span class="feature-badge free">Free</span></td>
+                                <td><code>Enabled</code></td>
+                                <td>Toggle ON / OFF</td>
+                                <td>No front camera photo taken; location/timestamp logged only.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Back Photo Burst</strong></td>
+                                <td><span class="feature-badge pro">PRO</span></td>
+                                <td><code>Disabled</code></td>
+                                <td>Toggle ON / OFF (Up to 4 photos)</td>
+                                <td>Front camera single photo captured only.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GPS Location Tagging</strong></td>
+                                <td><span class="feature-badge free">Free</span></td>
+                                <td><code>Enabled</code></td>
+                                <td>Toggle ON / OFF</td>
+                                <td>Email alert contains photos without Google Maps link or coordinates.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Google Drive Sync</strong></td>
+                                <td><span class="feature-badge pro">PRO</span></td>
+                                <td><code>Disabled</code></td>
+                                <td>Toggle ON / OFF + Account Select</td>
+                                <td>Media saved locally in app private gallery only; no cloud backup.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fake Home Decoy</strong></td>
+                                <td><span class="feature-badge pro">PRO</span></td>
+                                <td><code>Disabled</code></td>
+                                <td>Toggle ON / OFF (Trigger count: 2/3)</td>
+                                <td>Standard lock screen error prompt remains visible.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Loud Anti-Theft Siren</strong></td>
+                                <td><span class="feature-badge pro">PRO</span></td>
+                                <td><code>Disabled</code></td>
+                                <td>Toggle ON / OFF (Siren Sound)</td>
+                                <td>Silent background capture without sound emission.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 6. Tech Difficulties -->
+            <div class="section-block" id="difficulties">
+                <div class="section-header">
+                    <div class="section-number">6</div>
+                    <h2 class="section-title">Technical Implementation Difficulties</h2>
+                </div>
+
+                <div class="grid-2">
+                    <div class="glass-card">
+                        <div class="card-icon rose"><i class="fa-brands fa-android"></i></div>
+                        <h3 class="card-title">DeviceAdmin API Scope Deprecations</h3>
+                        <p class="card-desc">Google has tightened Android <code>DeviceAdminReceiver</code> scope.
+                            Intercepting <code>ACTION_PASSWORD_FAILED</code> requires explicit admin activation by the
+                            user during initial setup.</p>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-icon amber"><i class="fa-solid fa-video-slash"></i></div>
+                        <h3 class="card-title">Background Camera Constraints (Android 10+)</h3>
+                        <p class="card-desc">Android 10+ restricts opening camera hardware from background services
+                            unless accompanied by a visible foreground service type
+                            (<code>FOREGROUND_SERVICE_TYPE_CAMERA</code>).</p>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-icon purple"><i class="fa-brands fa-apple"></i></div>
+                        <h3 class="card-title">iOS Platform Lock Screen Blocker</h3>
+                        <p class="card-desc">Apple iOS sandbox does <strong>NOT</strong> expose lock screen failed
+                            unlock callbacks to third-party applications. Core lock screen intruder capture is Android
+                            exclusive.</p>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-icon blue"><i class="fa-solid fa-box-archive"></i></div>
+                        <h3 class="card-title">Scoped Storage & Drive Token Refresh</h3>
+                        <p class="card-desc">Android 11+ Scoped Storage requires writing media to private app
+                            directories before streaming to Google Drive using background OAuth2 refresh tokens.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Future Risks -->
+            <div class="section-block" id="risks">
+                <div class="section-header">
+                    <div class="section-number">7</div>
+                    <h2 class="section-title">Future Issues, Risks & Mitigation Strategies</h2>
+                </div>
+
+                <div class="callout warning">
+                    <i class="fa-solid fa-triangle-exclamation callout-icon"></i>
+                    <div class="callout-content">
+                        <div class="callout-title">Google Play Policy Compliance Risk</div>
+                        Apps utilizing Device Admin, Camera, and Background Location face intensive automated and manual
+                        Play Store policy audits.
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3 class="card-title"><i class="fa-solid fa-shield-virus"></i> Risk Mitigation Plan</h3>
+                    <ul
+                        style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                        <li><strong>Transparent Prompts:</strong> Provide full-page video demonstrations during setup
+                            explaining why DeviceAdmin & Camera permissions are needed.</li>
+                        <li><strong>WorkManager Adaptation:</strong> Migrate long video captures into atomic 15-second
+                            chunks compatible with Android 15+ background execution limits.</li>
+                        <li><strong>Laravel Proxy Backup:</strong> Route cloud uploads through our central Laravel
+                            storage API to prevent client-side Google Drive API quota exhaustion.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 8. Flutter App Stack -->
+            <div class="section-block" id="app-stack">
+                <div class="section-header">
+                    <div class="section-number">8</div>
+                    <h2 class="section-title">App-Side Requirements & Tools (Flutter)</h2>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Required Pubspec
+                    Dependencies</h3>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>pubspec.yaml</span>
+                        <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i>
+                            Copy</button>
+                    </div>
+                    <pre><code>dependencies:
+  flutter:
+    sdk: flutter
+
+  # Hardware & Media Access
+  camera: ^0.11.0+1                # Silent photo & video capture
+  record: ^5.1.2                   # Audio recording
+  geolocator: ^12.0.0              # Precise GPS location fetching
+  geocoding: ^3.0.0                # Lat/Long to address translation
+
+  # Background Services & Notifications
+  flutter_local_notifications: ^17.2.1 # Local alerts
+  workmanager: ^0.5.2              # Background queue manager
+
+  # Security & Storage
+  local_auth: ^2.2.0               # Biometrics (Fingerprint/FaceID)
+  flutter_secure_storage: ^9.2.2   # Encrypted token storage
+  hive_flutter: ^1.1.0             # Local NoSQL timeline database
+
+  # Cloud & Networking
+  googleapis: ^13.2.0              # Google Drive REST API
+  google_sign_in: ^6.2.1           # OAuth2 authentication
+  http: ^1.2.1                     # Laravel API Client</code></pre>
+                </div>
+
+                <div class="callout success">
+                    <i class="fa-solid fa-screwdriver-wrench callout-icon"></i>
+                    <div class="callout-content">
+                        <div class="callout-title">Development & Testing Requirements</div>
+                        Must test on <strong>physical Android devices</strong> (Xiaomi, Samsung, Pixel). Android
+                        Emulators cannot simulate hardware camera locks, OEM battery saving daemons, or screen lock
+                        password events reliably.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. Laravel Backend Stack -->
+            <div class="section-block" id="backend-stack">
+                <div class="section-header">
+                    <div class="section-number">9</div>
+                    <h2 class="section-title">Backend-Side Technical Requirements (Laravel)</h2>
+                </div>
+
+                <div class="grid-3" style="margin-bottom: 1.5rem;">
+                    <div class="glass-card">
+                        <div class="card-icon blue"><i class="fa-brands fa-laravel"></i></div>
+                        <h3 class="card-title">Laravel 11 REST API</h3>
+                        <p class="card-desc">PHP 8.2+ core with <code>laravel/sanctum</code> for secure API token
+                            authentication and device management.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-icon emerald"><i class="fa-solid fa-bolt"></i></div>
+                        <h3 class="card-title">Redis & Horizon</h3>
+                        <p class="card-desc">Asynchronous queue processing for high-volume email alert dispatch and
+                            media background processing.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-icon purple"><i class="fa-solid fa-paper-plane"></i></div>
+                        <h3 class="card-title">Transactional Mail</h3>
+                        <p class="card-desc">Amazon SES or Mailgun integration for instant, high-deliverability email
+                            alerts with photo attachments.</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Database
+                    Entity-Relationship Structure</h3>
+
+                <div class="mermaid-wrapper">
+                    <pre class="mermaid">
+erDiagram
+    USERS ||--o{ DEVICES : owns
+    DEVICES ||--o{ INCIDENTS : logs
+    INCIDENTS ||--o{ MEDIA : attaches
+
+    USERS {
+        bigint id PK
+        string email
+        string password_hash
+    }
+    DEVICES {
+        bigint id PK
+        string device_uuid
+        boolean is_pro_active
+    }
+    INCIDENTS {
+        bigint id PK
+        decimal latitude
+        decimal longitude
+        timestamp captured_at
+    }
+    MEDIA {
+        bigint id PK
+        enum type "PHOTO, VIDEO"
+        string file_url
+    }
+                    </pre>
+                </div>
+            </div>
+
+            <!-- 10. Pros and Cons Analysis -->
+            <div class="section-block" id="pros-cons">
+                <div class="section-header">
+                    <div class="section-number">10</div>
+                    <h2 class="section-title">Pros and Cons Analysis</h2>
+                </div>
+
+                <div class="pros-cons-grid">
+                    <!-- Pros -->
+                    <div class="glass-card pro-card">
+                        <div class="card-icon emerald"><i class="fa-solid fa-thumbs-up"></i></div>
+                        <h3 class="card-title" style="color: var(--accent-success);">System Advantages (PROS)</h3>
+                        <ul class="pro-list" style="margin-top: 1rem;">
+                            <li><strong>High Evidence Yield:</strong> Captures facial photos, ambient audio, video, and
+                                GPS location instantly upon unlock failure.</li>
+                            <li><strong>Cloud Data Survival:</strong> Off-device email & Google Drive backup ensures
+                                evidence is safe even if the phone is destroyed or wiped.</li>
+                            <li><strong>Clever Decoy Trickery:</strong> Fake Home Screen tricks intruders into entering
+                                dummy sessions while silently recording video.</li>
+                            <li><strong>Scalable Laravel Backend:</strong> Queue-driven email rendering handles
+                                concurrent alert bursts effortlessly.</li>
+                            <li><strong>Cross-Platform Base:</strong> Flutter codebase allows 85%+ shared logic between
+                                Android and companion web dashboards.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Cons -->
+                    <div class="glass-card con-card">
+                        <div class="card-icon amber"><i class="fa-solid fa-thumbs-down"></i></div>
+                        <h3 class="card-title" style="color: var(--accent-warning);">System Tradeoffs (CONS)</h3>
+                        <ul class="con-list" style="margin-top: 1rem;">
+                            <li><strong>iOS Platform Restriction:</strong> Apple iOS sandbox prevents third-party apps
+                                from intercepting lock screen PIN failures (Android exclusive core).</li>
+                            <li><strong>Device Admin Policy Scrutiny:</strong> Risk of strict Google Play Store review
+                                rejections if permissions are not thoroughly justified.</li>
+                            <li><strong>OEM Background Killing:</strong> Requires guiding non-technical users to
+                                manually disable battery optimization on Xiaomi/Samsung phones.</li>
+                            <li><strong>Hardware Lock Conflicts:</strong> If another app holds active camera lock at
+                                attempt time, photo capture can face minor delay.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Mermaid Diagrams
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#6366f1',
+                primaryTextColor: '#ffffff',
+                primaryBorderColor: '#818cf8',
+                lineColor: '#94a3b8',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a'
+            }
+        });
+
+        // Theme Toggle (Dark/Light)
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light');
+            const isDark = document.documentElement.classList.contains('dark');
+            themeToggle.innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        });
+
+        // Feature Filter Tabs
+        function filterFeatures(category) {
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const items = document.querySelectorAll('.feature-item');
+            items.forEach(item => {
+                if (category === 'all') {
+                    item.style.display = 'block';
+                } else if (item.classList.contains(category)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Live Search Filter
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.glass-card, .table-responsive');
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Scrollspy Navigation Highlight
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.section-block, .hero-card');
+            const navItems = document.querySelectorAll('.nav-item');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const link = item.querySelector('a').getAttribute('href').substring(1);
+                if (link === current) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // Copy Code Functionality
+        function copyCode(button) {
+            const codeBlock = button.parentElement.nextElementSibling.querySelector('code');
+            navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
