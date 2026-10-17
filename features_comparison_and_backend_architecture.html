@@ -1,0 +1,2492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Theft Mobile Apps: Feature Comparison, Implementation Audit & Cloud Backend Architecture</title>
+    <meta name="description" content="In-depth technical comparison of CrookCatcher, Lockwatch, and our implemented Flutter + Kotlin sample app, featuring 50k user storage sizing and backend architecture.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Mermaid.js for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+    <style>
+        :root {
+            /* Premium Light Theme Color Palette - No Dark Mode */
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-muted: #e2e8f0;
+            
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --border-accent: #818cf8;
+
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+
+            /* Premium Accent Tones */
+            --primary: #4338ca;         /* Deep Indigo */
+            --primary-light: #e0e7ff;
+            --primary-hover: #3730a3;
+            
+            --secondary: #0284c7;       /* Royal Cerulean Blue */
+            --secondary-light: #e0f2fe;
+
+            --success: #059669;         /* Rich Emerald */
+            --success-light: #d1fae5;
+            --success-border: #a7f3d0;
+
+            --warning: #d97706;         /* Warm Amber */
+            --warning-light: #fef3c7;
+            --warning-border: #fde68a;
+
+            --danger: #dc2626;          /* Crimson Red */
+            --danger-light: #fee2e2;
+            --danger-border: #fca5a5;
+
+            --purple: #7c3aed;
+            --purple-light: #ede9fe;
+
+            /* Elevation Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Top Navigation Bar */
+        .top-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--text-heading);
+            text-decoration: none;
+        }
+
+        .navbar-brand i {
+            color: var(--primary);
+            font-size: 1.35rem;
+        }
+
+        .desktop-nav-menu .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .desktop-nav-menu .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .desktop-nav-menu .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .badge-pill-header {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Mobile Hamburger Button */
+        .nav-toggle-btn {
+            display: none;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.75rem;
+            color: var(--text-heading);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-toggle-btn:hover {
+            background: var(--bg-subtle);
+            color: var(--primary);
+            border-color: var(--border-medium);
+        }
+
+        /* Mobile Side Navigation Drawer (Clean, Solid, Clickable) */
+        .mobile-side-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 310px;
+            max-width: 85vw;
+            height: 100vh;
+            background-color: #ffffff !important;
+            box-shadow: 6px 0 35px rgba(15, 23, 42, 0.18);
+            z-index: 100000 !important;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1.25rem;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-side-nav.open {
+            transform: translateX(0) !important;
+        }
+
+        .mobile-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .mobile-drawer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-heading);
+        }
+
+        .mobile-drawer-close {
+            background: #f1f5f9;
+            border: 1px solid var(--border-light);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-drawer-close:hover {
+            background: #fee2e2;
+            color: var(--danger);
+            border-color: #fca5a5;
+        }
+
+        .mobile-drawer-body {
+            flex: 1;
+        }
+
+        .mobile-drawer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-drawer-links a {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        .mobile-drawer-links a i {
+            width: 22px;
+            text-align: center;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .mobile-drawer-links a:hover,
+        .mobile-drawer-links a:active {
+            background-color: var(--primary-light) !important;
+            color: var(--primary) !important;
+        }
+
+        .mobile-drawer-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* Mobile Backdrop Overlay */
+        .mobile-drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 99999 !important;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .mobile-drawer-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 991px) {
+            .top-navbar {
+                padding: 0.85rem 1.25rem;
+            }
+
+            .desktop-nav-menu,
+            .desktop-badge {
+                display: none !important;
+            }
+
+            .nav-toggle-btn {
+                display: inline-flex !important;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .nav-toggle-btn,
+            .mobile-side-nav,
+            .mobile-drawer-backdrop {
+                display: none !important;
+            }
+
+            .desktop-nav-menu {
+                display: block !important;
+            }
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem 1.5rem;
+        }
+
+        /* Header / Hero Section */
+        .hero-banner {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 2.75rem 2.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .hero-pretitle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #eef2ff;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.35rem 0.9rem;
+            border-radius: var(--radius-full);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #c7d2fe;
+        }
+
+        .hero-title {
+            font-size: 2.35rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.025em;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-body);
+            max-width: 950px;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-meta-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+            border-top: 1px solid var(--border-light);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .hero-meta-item i {
+            color: var(--primary);
+        }
+
+        /* Stat KPI Row */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.35rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-medium);
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label i {
+            font-size: 1.1rem;
+            padding: 0.35rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .kpi-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Section Cards */
+        .content-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 2.25rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .section-header {
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .section-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            background: var(--bg-subtle);
+            color: var(--text-muted);
+            border: 1px solid var(--border-light);
+        }
+
+        /* Comparison Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        table.spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            text-align: left;
+            background: var(--bg-surface);
+        }
+
+        table.spec-table th {
+            background: #f8fafc;
+            color: var(--text-heading);
+            font-weight: 700;
+            padding: 1rem 1.15rem;
+            border-bottom: 2px solid var(--border-light);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        table.spec-table td {
+            padding: 0.95rem 1.15rem;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-body);
+            vertical-align: middle;
+        }
+
+        table.spec-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        table.spec-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Feature Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-active {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+
+        .badge-pro {
+            background: var(--purple-light);
+            color: var(--purple);
+            border: 1px solid #ddd6fe;
+        }
+
+        .badge-free {
+            background: var(--secondary-light);
+            color: var(--secondary);
+            border: 1px solid #bae6fd;
+        }
+
+        .badge-missing {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+        }
+
+        .badge-roadmap {
+            background: var(--warning-light);
+            color: var(--warning);
+            border: 1px solid var(--warning-border);
+        }
+
+        /* 3-Way Product Cards */
+        .app-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .app-summary-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .app-summary-card.highlight {
+            border: 2px solid var(--primary);
+            background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+            position: relative;
+        }
+
+        .card-ribbon {
+            position: absolute;
+            top: -12px;
+            right: 18px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .app-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .app-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .icon-crook { background: #fee2e2; color: #dc2626; }
+        .icon-lockwatch { background: #e0f2fe; color: #0284c7; }
+        .icon-sample { background: #e0e7ff; color: #4338ca; }
+
+        .app-card-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-heading);
+        }
+
+        .app-card-pkg {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .app-feature-list {
+            list-style: none;
+            margin: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        .app-feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        .app-feature-list li i {
+            margin-top: 0.2rem;
+            font-size: 0.85rem;
+        }
+
+        /* Two-column Highlight Box for Missing Features */
+        .gap-highlight-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .gap-highlight-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .gap-card {
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .gap-card.crook-to-lockwatch {
+            background: #fff8f8;
+            border-color: #fecaca;
+        }
+
+        .gap-card.lockwatch-to-crook {
+            background: #f0f9ff;
+            border-color: #bae6fd;
+        }
+
+        .gap-card-title {
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .gap-card.crook-to-lockwatch .gap-card-title { color: #b91c1c; }
+        .gap-card.lockwatch-to-crook .gap-card-title { color: #0369a1; }
+
+        .gap-item-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .gap-item-list li {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        .gap-item-list li i {
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        /* Scenario Walkthrough Cards */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .scenario-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .scenario-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .scenario-tag-pill {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-full);
+            background: var(--bg-subtle);
+            color: var(--text-muted);
+        }
+
+        .scenario-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-heading);
+        }
+
+        .scenario-context {
+            font-size: 0.85rem;
+            color: var(--text-body);
+            background: var(--bg-subtle);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary);
+        }
+
+        .scenario-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            font-size: 0.82rem;
+        }
+
+        .scenario-app-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            border-bottom: 1px dashed var(--border-light);
+            padding-bottom: 0.5rem;
+        }
+
+        .scenario-app-name {
+            font-weight: 700;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Interactive Storage Calculator */
+        .calculator-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            border: 1px solid #c7d2fe;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .calc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .calc-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .calc-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .calc-result-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .calc-res-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .calc-res-val {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: var(--font-mono);
+        }
+
+        .calc-res-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Architecture Sequence Block */
+        .arch-diagram-wrapper {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .arch-diagram-wrapper .mermaid {
+            width: 100%;
+        }
+
+        /* Code Block */
+        pre.code-block {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: #1e293b;
+            overflow-x: auto;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        /* Callout Alerts */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 1.15rem 1.35rem;
+            margin: 1.25rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .callout-info {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #312e81;
+        }
+
+        .callout-info i {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-top: 0.15rem;
+        }
+
+        .callout-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .callout-success i {
+            color: var(--success);
+            font-size: 1.1rem;
+            margin-top: 0.15rem;
+        }
+
+        .callout-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+
+        .callout-warning i {
+            color: var(--warning);
+            font-size: 1.1rem;
+            margin-top: 0.15rem;
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-light);
+            padding: 2.5rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Print optimization */
+        @media print {
+            body { background: #ffffff; }
+            .top-navbar, .calc-controls, .btn-filter { display: none !important; }
+            .content-section { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Desktop Top Navigation Bar -->
+    <header class="top-navbar">
+        <a href="#" class="navbar-brand">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>LockGuard Architectural Systems</span>
+        </a>
+
+        <!-- Desktop Horizontal Navigation Links -->
+        <nav class="desktop-nav-menu">
+            <ul class="nav-links">
+                <li><a href="#landscape">3-Way Landscape</a></li>
+                <li><a href="#comparison">Feature Matrix</a></li>
+                <li><a href="#gap-analysis">Missing Features</a></li>
+                <li><a href="#our-sample">Our Implementation</a></li>
+                <li><a href="#scenarios">Threat Scenarios</a></li>
+                <li><a href="#storage-calc">50k Sizing</a></li>
+                <li><a href="#backend-arch">Cloud Architecture</a></li>
+            </ul>
+        </nav>
+
+        <span class="badge-pill-header desktop-badge">Lead Architect Report</span>
+
+        <!-- Mobile Hamburger Toggle Button -->
+        <button class="nav-toggle-btn" id="mobileNavToggle" aria-label="Open Navigation Drawer">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Standalone Mobile Side Navbar Drawer (Root Level - Completely Sharp & Clickable) -->
+    <aside class="mobile-side-nav" id="mobileDrawer" aria-label="Mobile Navigation Drawer">
+        <div class="mobile-drawer-header">
+            <div class="mobile-drawer-brand">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i>
+                <span>LockGuard</span>
+            </div>
+            <button class="mobile-drawer-close" id="mobileDrawerClose" aria-label="Close Navigation Drawer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <nav class="mobile-drawer-body">
+            <ul class="mobile-drawer-links">
+                <li><a href="#landscape"><i class="fa-solid fa-cubes"></i> <span>3-Way Landscape</span></a></li>
+                <li><a href="#comparison"><i class="fa-solid fa-table-list"></i> <span>Feature Matrix</span></a></li>
+                <li><a href="#gap-analysis"><i class="fa-solid fa-arrows-split-up-and-left"></i> <span>Missing Features</span></a></li>
+                <li><a href="#our-sample"><i class="fa-solid fa-laptop-code"></i> <span>Our Implementation</span></a></li>
+                <li><a href="#scenarios"><i class="fa-solid fa-shield-cat"></i> <span>Threat Scenarios</span></a></li>
+                <li><a href="#storage-calc"><i class="fa-solid fa-calculator"></i> <span>50k Sizing</span></a></li>
+                <li><a href="#backend-arch"><i class="fa-solid fa-server"></i> <span>Cloud Architecture</span></a></li>
+            </ul>
+        </nav>
+
+        <div class="mobile-drawer-footer">
+            <span class="badge-pill-header" style="text-align: center; display: block;">Lead Architect Report</span>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 0.35rem;">LockGuard v2.4 Architecture</div>
+        </div>
+    </aside>
+
+    <!-- Backdrop Overlay for Mobile Side Nav -->
+    <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop"></div>
+
+    <main class="container">
+
+        <!-- Hero Section -->
+        <section class="hero-banner">
+            <div class="hero-pretitle">
+                <i class="fa-solid fa-code-compare"></i>
+                Senior Engineering & Analyst Audit • October 2026
+            </div>
+            <h1 class="hero-title">Mobile Anti-Theft Security Apps: Technical Feature Comparison, Implementation Audit & Cloud Backend Architecture</h1>
+            <p class="hero-subtitle">
+                Analysis of <strong>CrookCatcher</strong>, <strong>Lockwatch</strong>, and our <strong>Sample Flutter + Native Android Implementation</strong>. Includes comprehensive cross-app capability matrices, on-device execution audits, real-life threat defense scenarios, mathematical 50,000-user storage sizing models, and cloud backend engineering recommendations.
+            </p>
+            <div class="hero-meta-bar">
+                <div class="hero-meta-item">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span><strong>Architect:</strong> Lead Mobile Systems Architect & Principal Security Analyst</span>
+                </div>
+                <div class="hero-meta-item">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span><strong>Scope:</strong> Client-Side Native Android, Flutter Cross-Platform & Serverless Cloud</span>
+                </div>
+                <div class="hero-meta-item">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span><strong>Target Scale:</strong> 50,000 Active Devices • ~150,000 Incidents/Month</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">
+                    <span>Target Active Users</span>
+                    <i class="fa-solid fa-users" style="background: #e0e7ff; color: #4338ca;"></i>
+                </div>
+                <div class="kpi-value">50,000</div>
+                <div class="kpi-desc">Monitored Android smartphones in production deployment</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">
+                    <span>Monthly Evidence Ingestion</span>
+                    <i class="fa-solid fa-cloud-arrow-up" style="background: #e0f2fe; color: #0284c7;"></i>
+                </div>
+                <div class="kpi-value">230.1 GB</div>
+                <div class="kpi-desc">Across ~150k monthly security incidents (photos + MP4 videos)</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">
+                    <span>30-Day Rolling Storage</span>
+                    <i class="fa-solid fa-database" style="background: #d1fae5; color: #059669;"></i>
+                </div>
+                <div class="kpi-value">~250 GB</div>
+                <div class="kpi-desc">Automated lifecycle purge maintains predictable ceiling</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">
+                    <span>Cloud Storage Cost</span>
+                    <i class="fa-solid fa-receipt" style="background: #fef3c7; color: #d97706;"></i>
+                </div>
+                <div class="kpi-value">$3.75 / mo</div>
+                <div class="kpi-desc">Via Cloudflare R2 with $0.00 zero egress bandwidth fees</div>
+            </div>
+        </div>
+
+        <!-- Section 1: 3-Way Landscape -->
+        <section id="landscape" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-cubes"></i>
+                    1. 3-Way Product Landscape & Core Architectures
+                </h2>
+                <span class="section-tag">Ecosystem Overview</span>
+            </div>
+
+            <div class="app-cards-grid">
+                <!-- CrookCatcher Card -->
+                <div class="app-summary-card">
+                    <div>
+                        <div class="app-card-header">
+                            <div class="app-icon icon-crook">
+                                <i class="fa-solid fa-user-secret"></i>
+                            </div>
+                            <div>
+                                <h3 class="app-card-title">CrookCatcher</h3>
+                                <div class="app-card-pkg">com.hammerandtheaxe.crookcatcher</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-body);">
+                            Market-leading anti-theft app with over 5M+ downloads. Emphasizes active deception (fake home screen), intimidation (loud alarm), and multi-shot burst captures.
+                        </p>
+                        <ul class="app-feature-list">
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>UI Philosophy:</strong> Rich, highly configurable settings and evidence gallery.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>Evidence:</strong> Up to 4 front photos, back photo, audio/video recording.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>Delivery:</strong> Relay server email + direct Google Drive OAuth2 backup.</li>
+                        </ul>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <strong>Monetization:</strong> Ad-supported Free + In-App PRO Subscription/Lifetime.
+                    </div>
+                </div>
+
+                <!-- Lockwatch Card -->
+                <div class="app-summary-card">
+                    <div>
+                        <div class="app-card-header">
+                            <div class="app-icon icon-lockwatch">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+                            <div>
+                                <h3 class="app-card-title">Lockwatch</h3>
+                                <div class="app-card-pkg">com.bloketech.lockwatch</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-body);">
+                            Minimalist, stealth-focused utility designed for maximum battery conservation. Distinctive for hardware-level triggers like SIM card swaps and power-on alerts.
+                        </p>
+                        <ul class="app-feature-list">
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>UI Philosophy:</strong> Ultra-minimal single-page setup; zero intrusive UI.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>False-Alarm Guard:</strong> 10-second delay cancels alert if PIN entered correctly.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>Hardware Hooks:</strong> Emailed new SIM phone # & cold boot location alerts.</li>
+                        </ul>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <strong>Monetization:</strong> Free Core Tier + One-time in-app upgrade for Premium.
+                    </div>
+                </div>
+
+                <!-- Our Sample App Card -->
+                <div class="app-summary-card highlight">
+                    <span class="card-ribbon">Implemented Codebase</span>
+                    <div>
+                        <div class="app-card-header">
+                            <div class="app-icon icon-sample">
+                                <i class="fa-solid fa-fingerprint"></i>
+                            </div>
+                            <div>
+                                <h3 class="app-card-title">LockGuard (Our Sample)</h3>
+                                <div class="app-card-pkg">com.example.crook_catcher</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-body);">
+                            Enterprise hybrid solution combining Flutter modern UI and an unmanaged native Kotlin Camera2 watchdog service with 100% on-device sovereign SMTP dispatch.
+                        </p>
+                        <ul class="app-feature-list">
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>No-Relay Sovereign SMTP:</strong> Direct raw TLS/SSL socket to port 465.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>Dual-Video Recording:</strong> 3s front MP4 + sequential 3s rear surroundings MP4.</li>
+                            <li><i class="fa-solid fa-check text-success" style="color: var(--success);"></i> <strong>Forensic Evidence Hub:</strong> Full local timeline, map viewer, and decoy launcher.</li>
+                        </ul>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <strong>Architecture:</strong> Fully unlocked demo build with native background reliability.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Comprehensive Feature Matrix -->
+        <section id="comparison" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-table-list"></i>
+                    2. In-Depth Cross-App Feature Matrix
+                </h2>
+                <span class="section-tag">28 Engineering Criteria</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Detailed comparison of capabilities across trigger detection, multi-media evidence capture, delivery channels, anti-theft deterrence, and offline resilience.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Capability & Security Feature</th>
+                            <th style="width: 20%;">CrookCatcher</th>
+                            <th style="width: 20%;">Lockwatch</th>
+                            <th style="width: 20%;">Our Sample App</th>
+                            <th style="width: 10%;">Tech Mechanism</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Trigger Mechanics -->
+                        <tr style="background: #f8fafc; font-weight: 700;">
+                            <td colspan="5"><i class="fa-solid fa-bolt" style="color: var(--warning); margin-right: 0.4rem;"></i> 1. Trigger & Detection Mechanisms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Failed Unlock Attempt Trigger</strong></td>
+                            <td><span class="status-badge badge-free">Free Native</span></td>
+                            <td><span class="status-badge badge-free">Free Native</span></td>
+                            <td><span class="status-badge badge-active">Active Native</span></td>
+                            <td><code>DeviceAdminReceiver</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Configurable Attempt Threshold (1–5)</strong></td>
+                            <td><span class="status-badge badge-free">Configurable</span></td>
+                            <td><span class="status-badge badge-free">Configurable</span></td>
+                            <td><span class="status-badge badge-active">Configurable</span></td>
+                            <td><code>SharedPreferences</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>10-Second False Alarm Cancel Window</strong></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-free">Included Free</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 1</span></td>
+                            <td>Timer / Handler Queue</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4+ Character Attempt Filter</strong></td>
+                            <td><span class="status-badge badge-roadmap">OS Default</span></td>
+                            <td><span class="status-badge badge-free">Included Free</span></td>
+                            <td><span class="status-badge badge-roadmap">OS Default</span></td>
+                            <td>Pattern / PIN validator</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SIM Card Change Detection & Alert</strong></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-pro">Premium Only</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 1</span></td>
+                            <td><code>ACTION_SIM_STATE_CHANGED</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Power-On Alert (Before Unlock)</strong></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-pro">Premium Only</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 1</span></td>
+                            <td><code>LOCKED_BOOT_COMPLETED</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>"Catch After Success" Trigger</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 2</span></td>
+                            <td><code>onPasswordSucceeded</code></td>
+                        </tr>
+
+                        <!-- Evidence & Media Capture -->
+                        <tr style="background: #f8fafc; font-weight: 700;">
+                            <td colspan="5"><i class="fa-solid fa-camera" style="color: var(--primary); margin-right: 0.4rem;"></i> 2. Evidence & Multi-Media Capture</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Silent Front-Facing Photo</strong></td>
+                            <td><span class="status-badge badge-free">1 Photo</span></td>
+                            <td><span class="status-badge badge-free">1 Photo</span></td>
+                            <td><span class="status-badge badge-active">Active (1–3 Photos)</span></td>
+                            <td><code>Camera2 silent capture</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Multi-Photo Burst Mode</strong></td>
+                            <td><span class="status-badge badge-pro">PRO (Up to 4)</span></td>
+                            <td><span class="status-badge badge-missing">Single Shot Only</span></td>
+                            <td><span class="status-badge badge-active">Active (3 Rapid Shots)</span></td>
+                            <td>ImageReader burst buffer</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rear Camera Surroundings Photo</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-pro">Premium Feature</span></td>
+                            <td><span class="status-badge badge-active">Active in Watchdog</span></td>
+                            <td>Dual-lens sequential query</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Front Video Clip with Audio</strong></td>
+                            <td><span class="status-badge badge-pro">PRO (1–3 min)</span></td>
+                            <td><span class="status-badge badge-pro">Premium (20 sec)</span></td>
+                            <td><span class="status-badge badge-active">Active (3 sec MP4)</span></td>
+                            <td><code>MediaRecorder</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sequential Dual Video (Front + Back)</strong></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-active">Active (Front + Back)</span></td>
+                            <td>Sequential camera switch</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pinpoint GPS Coordinates & Link</strong></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-active">Active (FusedLocation)</span></td>
+                            <td><code>LocationManager</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Reverse Geocoded Street Address</strong></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-roadmap">Map Link Only</span></td>
+                            <td><span class="status-badge badge-active">Active On-Device</span></td>
+                            <td><code>Geocoder API</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Battery Level & Timestamp Metadata</strong></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-active">Active Logged</span></td>
+                            <td><code>BatteryManager</code></td>
+                        </tr>
+
+                        <!-- Alert & Transmission -->
+                        <tr style="background: #f8fafc; font-weight: 700;">
+                            <td colspan="5"><i class="fa-solid fa-paper-plane" style="color: var(--secondary); margin-right: 0.4rem;"></i> 3. Alert Dispatch & Transmission</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Instant Email Alert Dispatch</strong></td>
+                            <td><span class="status-badge badge-free">Cloud Relay</span></td>
+                            <td><span class="status-badge badge-free">Cloud Relay</span></td>
+                            <td><span class="status-badge badge-active">Direct SSL Socket</span></td>
+                            <td>TLS Raw Socket / Cloud API</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Multiple Email Recipients (Up to 3)</strong></td>
+                            <td><span class="status-badge badge-pro">PRO (3 Emails)</span></td>
+                            <td><span class="status-badge badge-missing">Single Email Only</span></td>
+                            <td><span class="status-badge badge-active">Active (Up to 3)</span></td>
+                            <td>Multi-recipient SMTP loop</td>
+                        </tr>
+                        <tr>
+                            <td><strong>On-Device Direct SMTP (Zero Relay Dependency)</strong></td>
+                            <td><span class="status-badge badge-missing">Requires Cloud</span></td>
+                            <td><span class="status-badge badge-missing">Requires Cloud</span></td>
+                            <td><span class="status-badge badge-active">Active On-Device</span></td>
+                            <td><code>SSLSocket (Port 465)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Google Drive Personal Cloud Sync</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-roadmap">Spec Blueprint</span></td>
+                            <td>Google Drive REST v3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Offline Queue & Auto-Retry</strong></td>
+                            <td><span class="status-badge badge-free">Supported</span></td>
+                            <td><span class="status-badge badge-free">Supported</span></td>
+                            <td><span class="status-badge badge-active">Active Pending Box</span></td>
+                            <td>Local SharedPreferences queue</td>
+                        </tr>
+
+                        <!-- Deception & Deterrence -->
+                        <tr style="background: #f8fafc; font-weight: 700;">
+                            <td colspan="5"><i class="fa-solid fa-shield-virus" style="color: var(--danger); margin-right: 0.4rem;"></i> 4. Deception, Deterrence & Self-Defense</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fake Home Screen Decoy Launcher</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-active">Active Flutter View</span></td>
+                            <td><code>SYSTEM_ALERT_WINDOW</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maximum Volume Panic Siren Alarm</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-active">Active AudioPlayer</span></td>
+                            <td><code>AudioManager STREAM_ALARM</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custom Lock Screen Warning Message</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 2</span></td>
+                            <td><code>setDeviceOwnerLockScreenInfo</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>In-App Biometric / PIN App Lock</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-active">Active (local_auth)</span></td>
+                            <td>BiometricPrompt API</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Disguised App Icon & Name</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-missing">Missing</span></td>
+                            <td><span class="status-badge badge-roadmap">Roadmap Phase 2</span></td>
+                            <td><code>PackageManager activity-alias</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stealth Mode (Notification Suppression)</strong></td>
+                            <td><span class="status-badge badge-pro">PRO Feature</span></td>
+                            <td><span class="status-badge badge-free">Native Silent</span></td>
+                            <td><span class="status-badge badge-active">Active Silent Channel</span></td>
+                            <td>NotificationManager IMPORTANCE_MIN</td>
+                        </tr>
+
+                        <!-- Evidence Review -->
+                        <tr style="background: #f8fafc; font-weight: 700;">
+                            <td colspan="5"><i class="fa-solid fa-folder-open" style="color: var(--purple); margin-right: 0.4rem;"></i> 5. Evidence Review & User Experience</td>
+                        </tr>
+                        <tr>
+                            <td><strong>In-App Historical Evidence Gallery</strong></td>
+                            <td><span class="status-badge badge-free">Unlimited</span></td>
+                            <td><span class="status-badge badge-warning">Limited (5 Free / 50 Pro)</span></td>
+                            <td><span class="status-badge badge-active">Active Unlimited</span></td>
+                            <td>Local encrypted Hive / SQLite</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Detailed Incident Inspector Modal</strong></td>
+                            <td><span class="status-badge badge-free">Included</span></td>
+                            <td><span class="status-badge badge-missing">Basic List Only</span></td>
+                            <td><span class="status-badge badge-active">Active Dedicated View</span></td>
+                            <td>Flutter Sheet with Map Launcher</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: Highlighted Missing Features -->
+        <section id="gap-analysis" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                    3. Cross-App Missing Features Deep-Dive
+                </h2>
+                <span class="section-tag">Competitive Asymmetry</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-body);">
+                Analysis of key capabilities present in one commercial market leader but absent in the other, explaining their operational trade-offs and security implications.
+            </p>
+
+            <div class="gap-highlight-grid">
+                <!-- In CrookCatcher but Missing in Lockwatch -->
+                <div class="gap-card crook-to-lockwatch">
+                    <h3 class="gap-card-title">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Features Present in CrookCatcher but MISSING in Lockwatch
+                    </h3>
+                    <ul class="gap-item-list">
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Fake Home Screen Decoy Launcher:</strong>
+                                CrookCatcher presents a convincing dummy launcher interface to trick an intruder into believing they successfully unlocked the device. Lockwatch has zero decoy UI.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Loud Anti-Theft Panic Siren:</strong>
+                                CrookCatcher can blast a high-volume siren overriding silent mode to startle thieves in public. Lockwatch offers no audible alarms.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>In-App Biometric App Lock:</strong>
+                                CrookCatcher protects its own settings and evidence gallery with biometric fingerprint/PIN authentication. Lockwatch has no dedicated app lock.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Disguised App Icon & Masquerading:</strong>
+                                CrookCatcher allows users to camouflage the launcher icon as a Calculator or Notes app. Lockwatch does not support icon swapping.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Multiple Alert Email Recipients (Up to 3):</strong>
+                                CrookCatcher PRO can broadcast alert emails to 3 emergency contacts simultaneously. Lockwatch is strictly limited to 1 recipient address.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Multi-Photo Rapid Burst (Up to 4 Shots):</strong>
+                                CrookCatcher captures up to 4 sequential front-camera photos to overcome blurry shots. Lockwatch captures only a single photo.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-xmark text-danger" style="color: var(--danger);"></i>
+                            <div>
+                                <strong>Personal Google Drive Cloud Backup:</strong>
+                                CrookCatcher uploads evidence directly into the user's personal Google Drive folder via OAuth2. Lockwatch has no cloud backup beyond email.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- In Lockwatch but Missing in CrookCatcher -->
+                <div class="gap-card lockwatch-to-crook">
+                    <h3 class="gap-card-title">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        Features Present in Lockwatch but MISSING in CrookCatcher
+                    </h3>
+                    <ul class="gap-item-list">
+                        <li>
+                            <i class="fa-solid fa-circle-check text-secondary" style="color: var(--secondary);"></i>
+                            <div>
+                                <strong>SIM Card Change Detection & Emergency Alert:</strong>
+                                When a thief replaces the owner's SIM card, Lockwatch immediately grabs GPS coordinates and emails the owner with the new SIM card's phone number and IMSI identifier. CrookCatcher completely lacks SIM swap monitoring.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-check text-secondary" style="color: var(--secondary);"></i>
+                            <div>
+                                <strong>Power-On Location Alert (Pre-Unlock):</strong>
+                                Lockwatch intercepts the cold boot sequence (`LOCKED_BOOT_COMPLETED`) and sends a location alert as soon as the phone starts up, before any unlock attempt is made. CrookCatcher only triggers after a failed PIN attempt.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-check text-secondary" style="color: var(--secondary);"></i>
+                            <div>
+                                <strong>10-Second False Alarm Grace Period:</strong>
+                                If the legitimate owner mistypes their PIN but enters the correct PIN within 10 seconds, Lockwatch automatically cancels and deletes the pending email alert. CrookCatcher fires immediately upon threshold breach.
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-circle-check text-secondary" style="color: var(--secondary);"></i>
+                            <div>
+                                <strong>4+ Character Attempt Filter:</strong>
+                                Lockwatch actively ignores accidental single taps or partial inputs (&lt; 4 PIN digits or &lt; 4 pattern dots), preventing unintentional counter increments. CrookCatcher triggers on any OS failure callback.
+                            </div>
+                        </li>
+                        <!-- <li>
+                            <i class="fa-solid fa-circle-check text-secondary" style="color: var(--secondary);"></i>
+                            <div>
+                                <strong>Sub-Second Lightweight Footprint:</strong>
+                                Lockwatch uses a bare minimum background service that terminates immediately after capture, consuming virtually 0% battery compared to CrookCatcher's heavier service model.
+                            </div>
+                        </li> -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Our Sample App Audit -->
+        <section id="our-sample" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-laptop-code"></i>
+                    4. Technical Audit of Our Implemented Sample App
+                </h2>
+                <span class="section-tag">Codebase Verification</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-body); margin-bottom: 1.25rem;">
+                Our real-time Android sample application demonstrates an advanced hybrid architecture pairing Flutter's expressive presentation layer with an unmanaged native Android Kotlin core:
+            </p>
+
+            <div class="callout callout-success">
+                <i class="fa-solid fa-circle-check"></i>
+                <div>
+                    <strong>Codebase Status:</strong> 
+                    Located in <code>android/app/src/main/kotlin/com/example/crook_catcher/</code> and <code>lib/</code>.
+                    All core hardware capture routines, native background services, wake-lock managers, and direct SMTP engines are fully coded and functional.
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Subsystem Component</th>
+                            <th>Source File & Module</th>
+                            <th>Implementation Mechanism</th>
+                            <th>Operational State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Native Background Service</strong></td>
+                            <td><code>CrookWatchdogService.kt</code></td>
+                            <td>Sticky Foreground Service (`START_STICKY`) with 30s `PARTIAL_WAKE_LOCK` guaranteeing CPU uptime during silent capture.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Silent Hardware Camera Engine</strong></td>
+                            <td><code>CameraHelper.kt</code></td>
+                            <td>Android `Camera2` API querying `CameraCharacteristics.LENS_FACING_FRONT` and `LENS_FACING_BACK`. Silent photo burst + dual video.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Direct Raw SSL/TLS Mailer</strong></td>
+                            <td><code>sendNativeSmtpEmail()</code></td>
+                            <td>Direct IPv4 raw socket connection (`SSLSocketFactory`) to port 465 with Base64 AUTH PLAIN/LOGIN. Bypasses 3rd party mail APIs.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lock Screen Admin Listener</strong></td>
+                            <td><code>AdminReceiver.kt</code></td>
+                            <td>`DeviceAdminReceiver` catching `ACTION_DEVICE_ADMIN_DISABLED` and `onPasswordFailed()` to trigger native watchdog intents.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cold Reboot Persistence</strong></td>
+                            <td><code>BootReceiver.kt</code></td>
+                            <td>Broadcast receiver listening for `ACTION_BOOT_COMPLETED` and `ACTION_LOCKED_BOOT_COMPLETED` to resurrect the watchdog.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Local Incident Bridge</strong></td>
+                            <td><code>SharedPreferences</code></td>
+                            <td>Native service queues incident payloads to `flutter.native_pending_incidents` for Flutter UI consumption on resume.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Flutter Presentation Layer</strong></td>
+                            <td><code>lib/presentation/</code></td>
+                            <td>Reactive State Management (`AppStateProvider`), Home Dashboard, Settings with PRO switches, Evidence Gallery, and Decoy Screen.</td>
+                            <td><span class="status-badge badge-active">100% Implemented</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Standalone Architecture Diagram -->
+            <div class="arch-diagram-wrapper">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Intruder as Intruder / Thief
+    participant LockScreen as Android LockScreen (DeviceAdmin)
+    participant Watchdog as CrookWatchdogService (Native Kotlin)
+    participant Cam as CameraHelper (Camera2 API)
+    participant SMTP as Direct TLS SSLSocket (Port 465)
+    participant Flutter as Flutter State & Gallery (Dart)
+    actor Owner as Device Owner Inbox (Up to 3 Emails)
+
+    Intruder->>LockScreen: Enters Incorrect PIN / Pattern
+    LockScreen->>Watchdog: AdminReceiver.onPasswordFailed()
+    Watchdog->>Watchdog: Acquire 30s PARTIAL_WAKE_LOCK
+    Watchdog->>Cam: Silent Capture 3 Front Photos
+    Watchdog->>Cam: Record 3-Sec Front Video (MP4 + Audio)
+    Watchdog->>Cam: Record 3-Sec Rear Surroundings Video
+    Watchdog->>Watchdog: Fetch Lat/Long GPS + Battery %
+    Watchdog->>SMTP: Connect Direct to smtp.gmail.com:465 (SSL)
+    SMTP-->>Owner: Dispatch Multipart MIME Email with Attachments
+    Watchdog->>Flutter: Queue to "flutter.native_pending_incidents"
+    Flutter-->>Flutter: Sync to Hive Incident Gallery & Show Alert
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Real-Life Threat Scenarios -->
+        <section id="scenarios" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-shield-cat"></i>
+                    5. Real-Life Security Threat Scenarios & Behavioral Walkthroughs
+                </h2>
+                <span class="section-tag">Field Operations</span>
+            </div>
+
+            <div class="scenario-grid">
+                <!-- Scenario 1 -->
+                <div class="scenario-card">
+                    <div class="scenario-header">
+                        <span class="scenario-tag-pill" style="background: #fee2e2; color: #dc2626;">Scenario 1</span>
+                        <h3 class="scenario-title">The Public Transit Pickpocket</h3>
+                    </div>
+                    <div class="scenario-context">
+                        <strong>Threat Event:</strong> A commuter's phone is pickpocketed on a subway train. The thief attempts common PINs (<code>1234</code>, <code>0000</code>) while sitting among passengers.
+                    </div>
+                    <div class="scenario-breakdown">
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-user-secret" style="color: #dc2626;"></i> CrookCatcher:</span>
+                            <span>Takes 3–4 photos, activates decoy fake launcher, and blasts siren alarm if configured. Alerts sent via cloud relay.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-eye" style="color: #0284c7;"></i> Lockwatch:</span>
+                            <span>Silently takes 1 photo. Waits 10s. Since no correct PIN is entered, emails photo + GPS coordinates to owner.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-fingerprint" style="color: #4338ca;"></i> Our Sample App:</span>
+                            <span>Fires 3 silent photos + 3s front video + 3s rear video. Directly dispatches email over TLS socket to 3 emergency contacts with GPS and battery level.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario 2 -->
+                <div class="scenario-card">
+                    <div class="scenario-header">
+                        <span class="scenario-tag-pill" style="background: #fef3c7; color: #d97706;">Scenario 2</span>
+                        <h3 class="scenario-title">Airport Baggage SIM-Swap</h3>
+                    </div>
+                    <div class="scenario-context">
+                        <strong>Threat Event:</strong> A stolen phone is immediately powered off and its SIM tray popped out to prevent tracking and bypass SMS 2FA codes.
+                    </div>
+                    <div class="scenario-breakdown">
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-user-secret" style="color: #dc2626;"></i> CrookCatcher:</span>
+                            <span style="color: var(--danger);"><strong>Fails to detect SIM removal.</strong> Remains dormant until someone turns the phone on and attempts unlock.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-eye" style="color: #0284c7;"></i> Lockwatch:</span>
+                            <span style="color: var(--success);"><strong>Optimal Defense:</strong> Broadcast receiver catches new SIM, sends GPS coordinates and the new SIM card's IMSI/phone # immediately.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-fingerprint" style="color: #4338ca;"></i> Our Sample App:</span>
+                            <span>Requires porting Lockwatch's <code>TelephonyManager.ACTION_SIM_CARD_STATE_CHANGED</code> receiver into native Kotlin.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario 3 -->
+                <div class="scenario-card">
+                    <div class="scenario-header">
+                        <span class="scenario-tag-pill" style="background: #e0f2fe; color: #0284c7;">Scenario 3</span>
+                        <h3 class="scenario-title">The Desk Snooper / Colleague</h3>
+                    </div>
+                    <div class="scenario-context">
+                        <strong>Threat Event:</strong> An office colleague picks up a phone left on a desk, tries a pattern once, fails, and the owner returns and unlocks it 7 seconds later.
+                    </div>
+                    <div class="scenario-breakdown">
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-user-secret" style="color: #dc2626;"></i> CrookCatcher:</span>
+                            <span>Fires photo immediately if threshold is 1. Sends false-alarm email to owner, creating awkward interpersonal tension.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-eye" style="color: #0284c7;"></i> Lockwatch:</span>
+                            <span style="color: var(--success);"><strong>Optimal Defense:</strong> 10-second grace window intercepts the legitimate unlock and silently discards the pending alert email. Zero false alarm spam.</span>
+                        </div>
+                        <div class="scenario-app-row">
+                            <span class="scenario-app-name"><i class="fa-solid fa-fingerprint" style="color: #4338ca;"></i> Our Sample App:</span>
+                            <span>Captured to local history. Implementing a 10s dispatch cancel timer in Kotlin will match Lockwatch's convenience.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Cloud Storage Sizing for 50,000 Users -->
+        <section id="storage-calc" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-calculator"></i>
+                    6. Cloud Storage & Bandwidth Sizing for 50,000 Users
+                </h2>
+                <span class="section-tag">Capacity Planning</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-body); margin-bottom: 1.25rem;">
+                Architectural model estimating monthly ingestion, active storage volumes under various retention policies, and cloud infrastructure costs for a 50,000 user production deployment.
+            </p>
+
+            <!-- Media Payload Breakdown Table -->
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Incident Asset Type</th>
+                            <th>Resolution / Bitrate Specification</th>
+                            <th>Avg Size / File</th>
+                            <th>Files / Incident</th>
+                            <th>Incident Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Front Intruder Photo</strong></td>
+                            <td>1080p JPEG @ 75% quality compression</td>
+                            <td>650 KB</td>
+                            <td>2 photos (burst)</td>
+                            <td><strong>1.30 MB</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rear Surroundings Photo</strong></td>
+                            <td>1080p JPEG @ 75% quality compression</td>
+                            <td>700 KB</td>
+                            <td>1 photo</td>
+                            <td><strong>0.70 MB</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Front Video Clip (with Audio)</strong></td>
+                            <td>3-Second H.264 MP4 (720p @ 24fps + AAC Audio)</td>
+                            <td>1.80 MB</td>
+                            <td>1 video clip</td>
+                            <td><strong>1.80 MB</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rear Surroundings Video Clip</strong></td>
+                            <td>3-Second H.264 MP4 (720p @ 24fps + AAC Audio)</td>
+                            <td>1.80 MB</td>
+                            <td>1 video clip</td>
+                            <td><strong>1.80 MB</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>GPS Telemetry & Device Metadata</strong></td>
+                            <td>JSON Record (Lat/Long, battery %, timestamp)</td>
+                            <td>2 KB</td>
+                            <td>1 record</td>
+                            <td><strong>0.002 MB</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Weighted Calculation Callout -->
+            <div class="callout callout-info">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Incident Distribution Modeling:</strong><br>
+                    • <strong>Lightweight Incident (Free Users - 65% of volume):</strong> 1 Photo + GPS = <code>~652 KB</code><br>
+                    • <strong>Standard Incident (Dual Photo - 20% of volume):</strong> 2 Photos (Front + Rear) + GPS = <code>~1.35 MB</code><br>
+                    • <strong>Full Forensic Incident (PRO Users - 15% of volume):</strong> 2 Photos + 2 Videos + GPS = <code>~5.60 MB</code><br>
+                    <strong>Weighted Average Payload per Incident = 1.534 MB</strong>
+                </div>
+            </div>
+
+            <!-- Mathematical Projections -->
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Metric / Time Horizon</th>
+                            <th>Conservative Usage (1.5 Inc/Mo)</th>
+                            <th>Standard Baseline (3.0 Inc/Mo)</th>
+                            <th>High Incident Peak (5.0 Inc/Mo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Total Monthly Incidents (50k Users)</strong></td>
+                            <td>75,000 incidents</td>
+                            <td><strong>150,000 incidents</strong></td>
+                            <td>250,000 incidents</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Daily Data Ingestion</strong></td>
+                            <td>3.83 GB / day</td>
+                            <td><strong>7.67 GB / day</strong></td>
+                            <td>12.78 GB / day</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Monthly Ingested Storage</strong></td>
+                            <td>115.0 GB / month</td>
+                            <td><strong>230.1 GB / month</strong></td>
+                            <td>383.5 GB / month</td>
+                        </tr>
+                        <tr>
+                            <td><strong>30-Day Rolling Storage Ceiling</strong></td>
+                            <td>~125 GB active</td>
+                            <td><strong>~250 GB active</strong></td>
+                            <td>~410 GB active</td>
+                        </tr>
+                        <tr>
+                            <td><strong>90-Day Legal Retention Window</strong></td>
+                            <td>~375 GB active</td>
+                            <td><strong>~750 GB active</strong></td>
+                            <td>~1.23 TB active</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1-Year Cumulative Storage (No Purge)</strong></td>
+                            <td>~1.38 TB / year</td>
+                            <td><strong>~2.76 TB / year</strong></td>
+                            <td>~4.60 TB / year</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Cloud Provider Cost Evaluation -->
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading); margin: 1.5rem 0 1rem 0;">
+                <i class="fa-solid fa-coins" style="color: var(--warning); margin-right: 0.5rem;"></i>
+                Cloud Object Storage Provider Cost Analysis (50,000 Users)
+            </h3>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Cloud Storage Provider</th>
+                            <th>Storage / GB</th>
+                            <th>Egress / GB</th>
+                            <th>30-Day Retention (~250GB)</th>
+                            <th>1-Year Archive (~2.8TB)</th>
+                            <th>Architectural Evaluation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #f0fdf4;">
+                            <td><strong>Cloudflare R2</strong></td>
+                            <td>$0.015 / GB</td>
+                            <td><strong>$0.00 (Zero Egress)</strong></td>
+                            <td><strong style="color: var(--success); font-size: 1.05rem;">$3.75 / mo</strong></td>
+                            <td><strong style="color: var(--success); font-size: 1.05rem;">$42.00 / mo</strong></td>
+                            <td>🏆 <strong>Top Recommendation:</strong> No egress penalty for streaming incident videos; S3-compatible.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Supabase Storage</strong></td>
+                            <td>Included in Pro tier</td>
+                            <td>Included up to 250GB</td>
+                            <td><strong>$25.00 / mo (All-In)</strong></td>
+                            <td><strong>~$65.00 / mo</strong></td>
+                            <td>🥈 <strong>Best All-In-One BaaS:</strong> Includes managed Postgres database, auth, and storage.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DigitalOcean Spaces</strong></td>
+                            <td>$5.00 for 250GB</td>
+                            <td>Included up to 1TB</td>
+                            <td><strong>$5.00 / mo</strong></td>
+                            <td><strong>~$55.00 / mo</strong></td>
+                            <td>Simple flat rate, CDN included, reliable S3 API.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Amazon AWS S3 (Standard)</strong></td>
+                            <td>$0.023 / GB</td>
+                            <td>$0.090 / GB</td>
+                            <td><strong>~$13.00 / mo</strong></td>
+                            <td><strong>~$76.00 / mo</strong></td>
+                            <td>High enterprise durability, but video egress bandwidth fees add recurring risk.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Interactive Storage Calculator Widget -->
+            <div class="calculator-box">
+                <div class="calc-header">
+                    <h3 class="calc-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        Interactive Dynamic Storage & Cost Estimator
+                    </h3>
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">Real-Time Slider Engine</span>
+                </div>
+
+                <div class="calc-controls">
+                    <div class="control-group">
+                        <label>
+                            <span>Active Monitored Users:</span>
+                            <span id="label-users" style="color: var(--primary); font-family: var(--font-mono);">50,000</span>
+                        </label>
+                        <input type="range" id="slider-users" min="5000" max="250000" step="5000" value="50000" oninput="updateCalculator()">
+                    </div>
+                    <div class="control-group">
+                        <label>
+                            <span>Avg Incidents / User / Month:</span>
+                            <span id="label-incidents" style="color: var(--primary); font-family: var(--font-mono);">3.0</span>
+                        </label>
+                        <input type="range" id="slider-incidents" min="0.5" max="8.0" step="0.5" value="3.0" oninput="updateCalculator()">
+                    </div>
+                    <div class="control-group">
+                        <label>
+                            <span>Data Retention Period:</span>
+                            <span id="label-retention" style="color: var(--primary); font-family: var(--font-mono);">30 Days</span>
+                        </label>
+                        <input type="range" id="slider-retention" min="15" max="365" step="15" value="30" oninput="updateCalculator()">
+                    </div>
+                </div>
+
+                <div class="calc-results-grid">
+                    <div class="calc-result-item">
+                        <div class="calc-res-label">Monthly Incidents</div>
+                        <div class="calc-res-val" id="res-incidents">150,000</div>
+                        <div class="calc-res-sub">Events processed</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-res-label">Monthly Ingestion</div>
+                        <div class="calc-res-val" id="res-ingestion">230 GB</div>
+                        <div class="calc-res-sub">Data uploaded</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-res-label">Active Storage Ceiling</div>
+                        <div class="calc-res-val" id="res-storage">230 GB</div>
+                        <div class="calc-res-sub">Retained disk footprint</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-res-label">Cloudflare R2 Cost</div>
+                        <div class="calc-res-val" id="res-cost-r2" style="color: var(--success);">$3.45</div>
+                        <div class="calc-res-sub">Per month ($0 egress)</div>
+                    </div>
+                    <div class="calc-result-item">
+                        <div class="calc-res-label">AWS S3 Est. Cost</div>
+                        <div class="calc-res-val" id="res-cost-s3" style="color: var(--warning);">$12.50</div>
+                        <div class="calc-res-sub">Storage + bandwidth</div>
+                    </div>
+                </div>
+
+                <!-- Provider Pricing Disclaimer Note -->
+                <div style="margin-top: 1.25rem; padding: 0.9rem 1.15rem; background: #ffffff; border: 1px solid #fde68a; border-left: 4px solid var(--warning); border-radius: var(--radius-sm); display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.82rem; line-height: 1.55; color: #92400e; box-shadow: var(--shadow-sm);">
+                    <i class="fa-solid fa-circle-info" style="font-size: 1rem; color: var(--warning); margin-top: 0.15rem; flex-shrink: 0;"></i>
+                    <div>
+                        <strong>NOTE / PRICING DISCLAIMER:</strong> 
+                        Please note that the calculations and estimated costs displayed above are <em>illustrative examples for architectural capacity planning and comparison purposes only</em>. Actual billing and pricing may vary on the real service provider side (Cloudflare, AWS, Supabase, Google Cloud) based on real-time factors including active API request rates (e.g., S3/R2 Class A PUT/LIST calls and Class B GET queries), dynamic video egress consumption, regional taxes, currency conversion rates, enterprise volume tiers, and periodic provider pricing updates.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Recommended Backend Architecture -->
+        <section id="backend-arch" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-server"></i>
+                    7. Best Backend Architecture Approach: Easy Development & Maintenance
+                </h2>
+                <span class="section-tag">Admin Panel & User Management</span>
+            </div>
+
+            <p style="font-size: 0.95rem; color: var(--text-body); margin-bottom: 1.5rem; line-height: 1.7;">
+                To fulfill our client's business requirements for <strong>monitoring user subscription details</strong>, <strong>managing user data</strong>, and maintaining effortless operation at a 50,000-user scale, the recommended architecture combines <strong>Supabase (Managed PostgreSQL BaaS with RLS)</strong>, <strong>Cloudflare R2 ($0 egress direct media storage)</strong>, and a <strong>Turnkey Web Admin Console (Next.js 14 / Refine or Laravel Filament)</strong>.
+            </p>
+
+            <!-- Admin Console Mockup / Feature Showcase -->
+            <div style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 2px solid var(--primary-light); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                        <span style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                        <strong style="font-size: 1.05rem; color: var(--text-heading); margin-left: 0.5rem;">
+                            <i class="fa-solid fa-gauge-high" style="color: var(--primary); margin-right: 0.35rem;"></i>
+                            LockGuard Client Web Admin Console (Live Operational View)
+                        </strong>
+                    </div>
+                    <span class="status-badge badge-active"><i class="fa-solid fa-circle-dot"></i> Production Ready</span>
+                </div>
+
+                <!-- Admin Dashboard KPI Widgets -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm);">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Registered Users</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading);">50,000</div>
+                        <div style="font-size: 0.75rem; color: var(--success); font-weight: 600;"><i class="fa-solid fa-arrow-trend-up"></i> +412 this week</div>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm);">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active PRO Subscribers</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">7,500 <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">(15.0%)</span></div>
+                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">$2.99/mo avg blend</div>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm);">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Monthly Recurring (MRR)</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--success);">$22,425</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">ARR Run-Rate: $269,100</div>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm);">
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Devices Armed</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">35,420</div>
+                        <div style="font-size: 0.75rem; color: var(--secondary); font-weight: 600;">70.8% Watchdog active</div>
+                    </div>
+                </div>
+
+                <!-- Admin Tab 1: Subscription Monitoring Table -->
+                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-heading); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-credit-card" style="color: var(--primary); margin-right: 0.4rem;"></i> Module 1: Live User Subscription Monitoring</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Auto-synced via Google Play / RevenueCat Webhooks</span>
+                </h4>
+                <div class="table-responsive" style="margin-bottom: 1.5rem;">
+                    <table class="spec-table" style="font-size: 0.82rem;">
+                        <thead>
+                            <tr>
+                                <th>User Account / Email</th>
+                                <th>Active Plan Tier</th>
+                                <th>Billing Provider</th>
+                                <th>Subscription Status</th>
+                                <th>Current Period Expiry</th>
+                                <th>Support Action Overrides</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>sarah.connor@gmail.com</strong><br><span style="font-size: 0.7rem; color: var(--text-muted);">UID: usr_8920141</span></td>
+                                <td><span class="status-badge badge-pro">PRO Annual ($24.99/yr)</span></td>
+                                <td><i class="fa-brands fa-google-play" style="color: #0284c7;"></i> Google Play</td>
+                                <td><span class="status-badge badge-active"><i class="fa-solid fa-check"></i> ACTIVE</span></td>
+                                <td>2027-09-15 (Auto-Renew ON)</td>
+                                <td>
+                                    <button style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">Extend 30d</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>marcus.vance@techcorp.io</strong><br><span style="font-size: 0.7rem; color: var(--text-muted);">UID: usr_7810332</span></td>
+                                <td><span class="status-badge badge-pro">PRO Monthly ($2.99/mo)</span></td>
+                                <td><i class="fa-brands fa-stripe" style="color: #6366f1;"></i> Stripe Direct</td>
+                                <td><span class="status-badge badge-warning"><i class="fa-solid fa-clock"></i> IN GRACE PERIOD</span></td>
+                                <td>2026-10-21 (Card Expired)</td>
+                                <td>
+                                    <button style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">Send Reminder</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>alex.rivera@outlook.com</strong><br><span style="font-size: 0.7rem; color: var(--text-muted);">UID: usr_9941028</span></td>
+                                <td><span class="status-badge badge-free">Free Tier</span></td>
+                                <td>— None —</td>
+                                <td><span class="status-badge badge-roadmap">FREE / EXPIRED</span></td>
+                                <td>— No Active Sub —</td>
+                                <td>
+                                    <button style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">+ Grant Promo PRO</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Admin Tab 2: User Data Management & Device Registry -->
+                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-heading); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-mobile-screen-button" style="color: var(--secondary); margin-right: 0.4rem;"></i> Module 2: User Data Management & Device Fleet Telemetry</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Device Admin Health & Heartbeat</span>
+                </h4>
+                <div class="table-responsive">
+                    <table class="spec-table" style="font-size: 0.82rem;">
+                        <thead>
+                            <tr>
+                                <th>Device UUID & Hardware</th>
+                                <th>Associated Owner</th>
+                                <th>OS & App Version</th>
+                                <th>Device Admin State</th>
+                                <th>Watchdog Armed</th>
+                                <th>Last Ping / Heartbeat</th>
+                                <th>Data / Privacy Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Samsung Galaxy S24 Ultra</strong><br><span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">UUID: 8a1f-4402-9bc3</span></td>
+                                <td>sarah.connor@gmail.com</td>
+                                <td>Android 14 (OneUI 6.1)<br>LockGuard v2.4.0</td>
+                                <td><span class="status-badge badge-active"><i class="fa-solid fa-shield"></i> ADMIN ACTIVE</span></td>
+                                <td><span class="status-badge badge-active">ARMED (100%)</span></td>
+                                <td>3 mins ago (Battery: 84%)</td>
+                                <td>
+                                    <button style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">Export GDPR</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Google Pixel 8 Pro</strong><br><span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">UUID: 39de-7109-cc81</span></td>
+                                <td>david.miller@gmail.com</td>
+                                <td>Android 15 (Vanilla)<br>LockGuard v2.4.0</td>
+                                <td><span class="status-badge badge-missing"><i class="fa-solid fa-circle-exclamation"></i> DISABLED BY USER</span></td>
+                                <td><span class="status-badge badge-missing">DISARMED</span></td>
+                                <td>2 days ago (Battery: 42%)</td>
+                                <td>
+                                    <button style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 0.25rem 0.55rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">Revoke Token</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Architecture Comparison Cards -->
+            <div class="arch-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--primary); margin-bottom: 0.6rem;">
+                        <i class="fa-solid fa-database"></i> 1. Supabase (Managed Postgres BaaS)
+                    </h4>
+                    <p style="font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">
+                        Provides enterprise authentication, device token management, and PostgreSQL Row-Level Security (RLS). Users are cryptographically restricted to their own incident records, while the Client Admin Console accesses global analytics using service role keys.
+                    </p>
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--secondary); margin-bottom: 0.6rem;">
+                        <i class="fa-solid fa-cloud"></i> 2. Cloudflare R2 (Direct Pre-Signed Storage)
+                    </h4>
+                    <p style="font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">
+                        High-resolution 1080p photos and MP4 video clips bypass the API application server entirely. The mobile phone uploads directly via pre-signed HTTP PUT tickets with <strong>$0 egress bandwidth fees</strong>, keeping cloud costs under $4.00/month.
+                    </p>
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                    <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--success); margin-bottom: 0.6rem;">
+                        <i class="fa-solid fa-table-columns"></i> 3. Turnkey Admin Console (Next.js / Filament)
+                    </h4>
+                    <p style="font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">
+                        Using <strong>Next.js 14 + Refine.dev</strong> or <strong>Laravel 11 + Filament v3</strong> allows the development team to launch a full-featured subscription monitoring and user data management console in <strong>under 3 days</strong> with zero boilerplate.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Complete Architecture Sequence Diagram -->
+            <div class="arch-diagram-wrapper">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as Mobile App User
+    actor Admin as Client Admin Staff
+    participant Phone as Android Watchdog (Flutter)
+    participant Edge as API / Edge Functions
+    participant R2 as Cloudflare R2 (Media)
+    participant DB as PostgreSQL (Supabase RLS)
+    participant Play as Google Play / RevenueCat
+    participant AdminUI as Next.js / Filament Admin Panel
+
+    User->>Play: Purchases PRO Subscription in Mobile App
+    Play->>Edge: Webhook: SUBSCRIPTION_PURCHASED (User ID, Plan, Expiry)
+    Edge->>DB: INSERT / UPDATE subscriptions (status='active', tier='pro')
+    AdminUI->>DB: Query Subscriptions & Revenue Metrics
+    AdminUI-->>Admin: Displays Real-time Subscribed User in Dashboard
+    Phone->>Edge: GET /api/v1/entitlements
+    Edge-->>Phone: Return { is_pro: true, features: ['dual_video', 'decoy', 'alarm'] }
+    
+    Note over Phone,R2: Incident Capture & Direct Upload Flow
+    Phone->>Edge: Request Pre-Signed Upload URLs
+    Edge-->>Phone: Return R2 Signed URLs (60s Expiry)
+    Phone->>R2: HTTP PUT Photos & MP4 Videos Direct ($0 Egress)
+    Phone->>DB: Record Incident Telemetry Metadata
+    AdminUI->>DB: Monitor Ingested Storage, Devices & Incident Logs
+                </div>
+            </div>
+
+            <!-- Database Schema Definition -->
+            <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-heading); margin-top: 1.5rem;">
+                <i class="fa-solid fa-code" style="color: var(--primary); margin-right: 0.4rem;"></i>
+                Core Database Schema: Users, Subscriptions, Devices & Incidents (PostgreSQL)
+            </h4>
+            <pre class="code-block">
+-- 1. Users Table (Core Identity & Role Management)
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(255),
+    role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'support', 'admin', 'superadmin')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- 2. Subscriptions Table (Commercial Entitlements & Google Play Sync)
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL CHECK (provider IN ('google_play', 'stripe', 'revenuecat', 'manual_promo')),
+    external_subscription_id VARCHAR(255),
+    plan_tier VARCHAR(50) DEFAULT 'free' CHECK (plan_tier IN ('free', 'pro_monthly', 'pro_annual', 'pro_lifetime')),
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'in_grace_period', 'cancelled', 'expired')),
+    current_period_start TIMESTAMP WITH TIME ZONE,
+    current_period_end TIMESTAMP WITH TIME ZONE,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3. Devices Table (Fleet Registry & Device Admin State)
+CREATE TABLE devices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    device_uuid VARCHAR(255) UNIQUE NOT NULL,
+    model VARCHAR(100),
+    os_version VARCHAR(50),
+    is_admin_active BOOLEAN DEFAULT FALSE,
+    is_armed BOOLEAN DEFAULT TRUE,
+    last_battery_level INT,
+    last_heartbeat TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 4. Incidents Table (Evidence & Cloud Object Keys)
+CREATE TABLE incidents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    device_id UUID REFERENCES devices(id) ON DELETE CASCADE,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    address TEXT,
+    battery_level INT,
+    failed_attempt_count INT DEFAULT 1,
+    photo_urls JSONB DEFAULT '[]'::jsonb,
+    video_urls JSONB DEFAULT '[]'::jsonb,
+    storage_bytes BIGINT DEFAULT 0,
+    is_starred BOOLEAN DEFAULT FALSE,
+    is_purged BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+            </pre>
+        </section>
+
+        <!-- Section 8: Roadmap & Recommendations -->
+        <section class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fa-solid fa-road"></i>
+                    8. Strategic Action Plan & Feature Enhancement Roadmap
+                </h2>
+                <span class="section-tag">Next Steps</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Phase & Milestone</th>
+                            <th>Target Features to Implement</th>
+                            <th>Architectural Benefit</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Phase 1: Feature Parity Enhancement</strong></td>
+                            <td>
+                                1. Implement <strong>10-Second False Alarm Cancel Window</strong>.<br>
+                                2. Add <strong>SIM Card Change Broadcast Receiver</strong> (`ACTION_SIM_STATE_CHANGED`).<br>
+                                3. Add <strong>Cold Boot Location Alert</strong> before first unlock.
+                            </td>
+                            <td>Matches Lockwatch's strongest hardware detection advantages while eliminating false alarms.</td>
+                            <td><span class="status-badge badge-active">Highest Priority</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 2: Hybrid Cloud Integration</strong></td>
+                            <td>
+                                1. Implement Supabase Edge Functions with Pre-Signed R2 uploads.<br>
+                                2. Sync local encrypted incidents with cloud database.<br>
+                                3. Multi-device web dashboard for remote evidence inspection.
+                            </td>
+                            <td>Provides seamless evidence synchronization without bogging down mobile battery or memory.</td>
+                            <td><span class="status-badge badge-pro">High Priority</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 3: Play Store Compliance & Battery Certification</strong></td>
+                            <td>
+                                1. Verify Android 14/15 Foreground Service types (`CAMERA`, `LOCATION`).<br>
+                                2. Provide Google Play Device Admin policy disclosure documentation.<br>
+                                3. Test on OEM aggressive battery savers (Samsung Knox, Xiaomi HyperOS).
+                            </td>
+                            <td>Ensures zero background app kills and seamless Google Play Store policy approval.</td>
+                            <td><span class="status-badge badge-free">Standard Priority</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="page-footer">
+        <div class="container" style="padding: 0;">
+            <p><strong>LockGuard Security Systems</strong> • Lead Mobile Systems Architect & Principal Security Analyst Audit</p>
+            <p style="margin-top: 0.35rem; font-size: 0.8rem; color: var(--text-light);">
+                Built with precision engineering, responsive design, and zero dark color palettes for pristine executive presentation.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Interactive Calculator Script & Mermaid Initialization -->
+    <script>
+        // Initialize Mermaid in Light Mode
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e0e7ff',
+                primaryTextColor: '#1e1b4b',
+                primaryBorderColor: '#6366f1',
+                lineColor: '#4f46e5',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#ffffff',
+                noteBkgColor: '#fef3c7',
+                noteTextColor: '#92400e',
+                fontFamily: 'Plus Jakarta Sans'
+            }
+        });
+
+        // Dynamic Calculator Logic
+        function updateCalculator() {
+            const users = parseInt(document.getElementById('slider-users').value);
+            const incPerUser = parseFloat(document.getElementById('slider-incidents').value);
+            const retentionDays = parseInt(document.getElementById('slider-retention').value);
+
+            // Update UI Labels
+            document.getElementById('label-users').innerText = users.toLocaleString();
+            document.getElementById('label-incidents').innerText = incPerUser.toFixed(1);
+            document.getElementById('label-retention').innerText = retentionDays + ' Days';
+
+            // Constants
+            const avgPayloadMB = 1.534; // Weighted MB per incident
+            const totalMonthlyIncidents = Math.round(users * incPerUser);
+            const dailyIncidents = totalMonthlyIncidents / 30;
+
+            const monthlyIngestionGB = (totalMonthlyIncidents * avgPayloadMB) / 1024;
+            const dailyIngestionGB = (dailyIncidents * avgPayloadMB) / 1024;
+
+            // Retained storage based on retention period
+            const retainedStorageGB = Math.round(dailyIngestionGB * retentionDays);
+
+            // Costs
+            // Cloudflare R2: $0.015 / GB-month, $0 egress
+            const costR2 = Math.max(0.10, retainedStorageGB * 0.015);
+
+            // AWS S3: $0.023 / GB storage + approx 30% egress @ $0.09/GB
+            const costS3Storage = retainedStorageGB * 0.023;
+            const costS3Egress = (monthlyIngestionGB * 0.30) * 0.09;
+            const costS3Total = costS3Storage + costS3Egress;
+
+            // Render Output
+            document.getElementById('res-incidents').innerText = totalMonthlyIncidents.toLocaleString();
+            document.getElementById('res-ingestion').innerText = Math.round(monthlyIngestionGB) + ' GB';
+            document.getElementById('res-storage').innerText = retainedStorageGB + ' GB';
+            document.getElementById('res-cost-r2').innerText = '$' + costR2.toFixed(2);
+            document.getElementById('res-cost-s3').innerText = '$' + costS3Total.toFixed(2);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', updateCalculator);
+
+        // Mobile Side Navigation Logic
+        const mobileNavToggle = document.getElementById('mobileNavToggle');
+        const mobileDrawerClose = document.getElementById('mobileDrawerClose');
+        const mobileDrawer = document.getElementById('mobileDrawer');
+        const mobileDrawerBackdrop = document.getElementById('mobileDrawerBackdrop');
+
+        function openSideNav() {
+            if (mobileDrawer && mobileDrawerBackdrop) {
+                mobileDrawer.classList.add('open');
+                mobileDrawerBackdrop.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+
+        function closeSideNav() {
+            if (mobileDrawer && mobileDrawerBackdrop) {
+                mobileDrawer.classList.remove('open');
+                mobileDrawerBackdrop.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        if (mobileNavToggle) mobileNavToggle.addEventListener('click', openSideNav);
+        if (mobileDrawerClose) mobileDrawerClose.addEventListener('click', closeSideNav);
+        if (mobileDrawerBackdrop) mobileDrawerBackdrop.addEventListener('click', closeSideNav);
+
+        // Auto-close side nav when clicking any anchor link on mobile
+        document.querySelectorAll('.mobile-drawer-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 992) {
+                    closeSideNav();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
